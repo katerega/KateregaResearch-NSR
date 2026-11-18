@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-model href="rfc7991bis.rnc"?>
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude"
+     category="info"
+     docName="draft-katerega-decentralized-datacentre-ops-00"
+     ipr="trust200902"
+     submissionType="IETF"
+     xml:lang="en"
+     version="3">
+  <front>
+    <title abbrev="Decentralised Data-Centre Operations">Operational Considerations for Decentralised Data-Centre Sites</title>
+    <seriesInfo name="Internet-Draft" value="draft-katerega-decentralized-datacentre-ops-00"/>
+    <author fullname="Micheal Katerega" initials="M." surname="Katerega">
+      <organization>Nehemiah Stem Research Ltd.</organization>
+    </author>
+    <date year="2026" month="November" day="18"/>
+    <area>Internet</area>
+    <workgroup>Internet Engineering Task Force</workgroup>
+    <keyword>decentralised data centres</keyword><keyword>edge computing</keyword><keyword>CATS</keyword><keyword>site capability</keyword><keyword>operations</keyword><keyword>resilience</keyword>
+    <abstract><t>This document describes operational considerations for a deployment of decentralised data-centre sites. It discusses site capability and state descriptions, lifecycle management, workload placement, computing-aware traffic steering, failure domains, and an experimental evaluation framework. It is intended to complement existing CATS architecture and data-model work and does not define a new protocol or data model.</t></abstract>
+  </front>
+  <middle>
+    <section anchor="Introduction"><name>Introduction</name>
+<t>Data-centre capacity is increasingly deployed across multiple locations, including regional facilities, modular installations, enterprise sites, and edge locations. A deployment may contain small facilities with different compute, storage, power, cooling, and network characteristics. Applications can benefit from selecting a service location using both network conditions and the capabilities and current state of the computing site.</t>
+<t>This document describes operational considerations for representing and operating a set of decentralised data-centre sites as a service infrastructure. It focuses on deployment topology, site capability descriptions, lifecycle state, failure domains, and the relationship between site operations and computing-aware traffic steering. It is intended to complement existing CATS architecture and requirements work rather than redefine CATS functions or protocols.</t>
+<t>The document is informational. It does not define a new routing protocol, discovery protocol, data model, API, or wire format. It identifies design considerations and an experimental framework that can be evaluated using interoperable existing technologies.</t>
+<section><name>Requirements Language</name>
+<t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 <xref target="RFC2119"/> <xref target="RFC8174"/> when, and only when, they appear in all capitals.</t></section>
+<section><name>Terminology</name><dl newline="true">
+<dt>Decentralised data-centre site:</dt><dd>A facility or modular installation that provides compute, storage, and associated infrastructure services at a location distinct from a central facility.</dd>
+<dt>Site operator:</dt><dd>The entity responsible for operating a site and publishing its service capabilities.</dd>
+<dt>Service instance:</dt><dd>A deployable instance of an application or computing service hosted at a site.</dd>
+<dt>Site state:</dt><dd>A time-bounded description of site availability and operational conditions, including compute capacity, storage capacity, power state, cooling state, and network reachability.</dd>
+<dt>Site federation:</dt><dd>A set of sites coordinated under a defined administrative and operational policy.</dd>
+<dt>Failure domain:</dt><dd>A set of resources that may become unavailable due to a shared fault, dependency, or operating condition.</dd>
+</dl></section></section>
+<section anchor="Problem"><name>Problem Statement and Scope</name>
+<t>Decentralised deployments create operational challenges that are not fully represented by a simple geographic distance between a client and a service site. A nearby site may have insufficient compute capacity, limited power, degraded cooling, a constrained uplink, or an administrative restriction. A more distant site may be a better candidate if its service state and network path are suitable.</t>
+<t>Operators also need to distinguish between a site that is reachable and a site that is capable of accepting additional work. Network reachability alone does not indicate available CPU, accelerator, memory, storage, power headroom, or the health of facility subsystems.</t>
+<t>This document considers a single administrative domain or a set of sites managed under a common policy. Cross-provider federation, commercial settlement, and global resource marketplaces are outside the scope of this version.</t>
+<t>The document does not propose changes to IP forwarding, CATS control-plane protocols, CATS metrics, or existing service discovery mechanisms. Implementations should reuse applicable standards and data models where possible, including the CATS framework <xref target="RFC10053"/> and its problem statement and requirements <xref target="RFC10054"/>.</t>
+</section>
+<section anchor="Architecture"><name>Operational Architecture</name>
+<t>A decentralised data-centre deployment can be described using five logical components: site infrastructure, site management, capability publication, service orchestration, and network traffic steering. These are functional roles and do not require separate physical systems.</t>
+<figure><name>Logical Components</name><artwork type="ascii-art"><![CDATA[
++-----------------------+
+| Application / Client  |
++-----------+-----------+
+            |
++-----------v-----------+
+| Service Orchestrator  |
++-----------+-----------+
+            |
++-----------v-----------+
+| CATS-aware Edge /     |
+| Traffic Steering      |
++-----------+-----------+
+            |
+     +------+------+
+     |             |
++----v----+   +----v----+
+| Site A  |   | Site B  |
+| Compute |   | Compute |
+| Storage |   | Storage |
+| Power   |   | Power   |
++---------+   +---------+
+]]></artwork></figure>
+<t>The site management function collects local operational information. Capability publication makes a selected subset available to the orchestration and traffic-steering functions. The orchestrator deploys or maintains service instances according to application policy. A CATS-aware edge function can use suitable computing and network information to select among service instances, consistent with the CATS architecture.</t>
+<t>Implementations may combine these roles. The separation is intended to make responsibilities and trust boundaries explicit.</t>
+</section>
+<section anchor="SiteDescription"><name>Site Capability and State Description</name>
+<t>A site description is useful only when its semantics, units, observation time, and validity are understood. An implementation or experiment should distinguish relatively static capabilities from dynamic operational state.</t>
+<table><name>Example Site Information Categories</name><thead><tr><th>Category</th><th>Example attributes</th><th>Typical change rate</th></tr></thead><tbody>
+<tr><td>Identity</td><td>Site identifier, operator, administrative domain</td><td>Low</td></tr>
+<tr><td>Location</td><td>Region, facility class, optional geographic coordinates</td><td>Low</td></tr>
+<tr><td>Compute</td><td>CPU architecture, accelerator class, allocatable capacity</td><td>Medium to high</td></tr>
+<tr><td>Storage</td><td>Storage class, capacity, performance class</td><td>Medium</td></tr>
+<tr><td>Network</td><td>Reachability, available bandwidth estimate, latency estimate</td><td>High</td></tr>
+<tr><td>Power</td><td>Power source class, available power headroom, backup status</td><td>High</td></tr>
+<tr><td>Cooling</td><td>Cooling capability and current operating state</td><td>Medium to high</td></tr>
+<tr><td>Service</td><td>Service identifiers, instance health, admission status</td><td>High</td></tr>
+</tbody></table>
+<t>Dynamic values SHOULD include an observation timestamp, measurement method, unit, and validity interval. A consumer SHOULD treat stale or missing measurements as unknown rather than assuming that a site has unlimited capacity or is unavailable.</t>
+<t>This document does not define a new data model. Candidate implementations should evaluate existing CATS data-model work and applicable management interfaces before proposing additional attributes.</t>
+</section>
+<section anchor="Lifecycle"><name>Site and Service Lifecycle</name>
+<t>A site can pass through states such as planned, commissioning, operational, degraded, maintenance, isolated, and decommissioned. A service instance can independently pass through states such as scheduled, starting, ready, overloaded, draining, failed, and stopped.</t>
+<t>Site state and service state should not be conflated. A site may remain operational while one service instance is failed. Conversely, a service process may appear healthy while the facility is approaching a power or cooling limit.</t>
+<t>When a site enters a degraded or maintenance state, orchestration policy can stop new admissions, migrate eligible workloads, or maintain existing workloads until a safe transition point. These actions are policy decisions and are not specified as protocol behaviour here.</t>
+</section>
+<section anchor="Placement"><name>Placement and Traffic-Steering Considerations</name>
+<t>Site selection may consider application requirements, compute availability, storage requirements, network path properties, power constraints, service health, and administrative policy. The relative importance of these factors depends on the application.</t>
+<t>Examples include latency-sensitive applications, data-locality-sensitive workloads, batch processing, and services that require local operation during upstream disconnection. The decision to place a workload and the decision to steer traffic to an existing instance are related but distinct operations.</t>
+<t>Implementations should avoid assuming that the lowest-latency network path always leads to the best service outcome. They should also avoid treating resource estimates as guarantees. Admission control and local enforcement remain the responsibility of the site operator.</t>
+<t>For CATS-related work, this document recommends expressing site and service considerations using the established CATS concepts and avoiding parallel definitions of CATS functions or metrics.</t>
+</section>
+<section anchor="Failure"><name>Failure Domains and Resilience</name>
+<t>Decentralised deployments may improve resilience when sites do not share critical failure dependencies. Geographic separation alone is insufficient: sites may depend on the same power distribution network, fibre route, cooling provider, cloud control plane, identity service, or upstream network.</t>
+<t>Operational inventories should record known shared dependencies and distinguish site failure from loss of management connectivity. A site that cannot reach a central controller may still be able to serve local clients under previously installed policy.</t>
+<t>Experiments should include site loss, partial network partition, stale telemetry, power limitation, cooling degradation, and management-plane unavailability. Recovery behaviour should be measured separately from steady-state performance.</t>
+</section>
+<section anchor="Experiment"><name>Evaluation Framework</name>
+<t>A reproducible evaluation can use a testbed containing at least three independently managed site instances. Each site should expose different compute capacity, storage capacity, network characteristics, and simulated power constraints.</t>
+<ol><li>Establish a baseline using static service placement.</li><li>Collect time-stamped site and service state.</li><li>Apply workload placement and traffic-steering policies using the collected information.</li><li>Introduce controlled changes in compute load, network delay, site availability, and power headroom.</li><li>Repeat the tests with stale, missing, and conflicting telemetry.</li><li>Publish configurations, workload traces, measurement scripts, and raw results.</li></ol>
+<t>Useful measurements include request completion time, service availability, workload placement success, rejected admissions, resource utilization, data movement, recovery time, and control-plane overhead. Results should report the testbed topology, workload, measurement interval, and uncertainty.</t>
+</section>
+<section anchor="Security"><name>Security Considerations</name>
+<t>Site capability and state information can reveal infrastructure topology, resource availability, workload patterns, and operational weaknesses. Operators should apply access control and data minimization to published information.</t>
+<t>Consumers should authenticate the source of operational information where supported by the management environment and should consider the integrity, freshness, and provenance of measurements. A malicious or compromised site could advertise false capacity or availability and attract workloads.</t>
+<t>Management interfaces should be protected against unauthorized changes. Site identifiers should be scoped to an administrative domain where global uniqueness is not required. Implementations should consider denial-of-service risks caused by rapid state changes or excessive telemetry publication.</t>
+</section>
+<section anchor="IANA"><name>IANA Considerations</name><t>This document makes no request to IANA and defines no protocol numbers, registries, or code points.</t></section>
+<section anchor="OpenIssues"><name>Open Issues</name>
+<t>This version intentionally leaves several matters open for discussion: the appropriate abstraction for a site capability description; how site state should be related to CATS metrics; how to represent shared infrastructure failure domains; and how to handle stale or unverifiable site information.</t>
+<t>Further work should be coordinated with the CATS Working Group and relevant management groups to avoid duplication of existing architecture, metric, and data-model work.</t>
+</section>
+  </middle>
+  <back>
+    
+    <references>
+      <name>References</name>
+      <references>
+        <name>Normative References</name>
+        <reference anchor="RFC2119">
+          <front><title>Key words for use in RFCs to Indicate Requirement Levels</title>
+            <author initials="S." surname="Bradner" fullname="S. Bradner"/>
+            <date month="March" year="1997"/></front>
+          <seriesInfo name="BCP" value="14"/><seriesInfo name="RFC" value="2119"/>
+        </reference>
+        <reference anchor="RFC8174">
+          <front><title>Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words</title>
+            <author initials="B." surname="Leiba" fullname="B. Leiba"/>
+            <date month="May" year="2017"/></front>
+          <seriesInfo name="BCP" value="14"/><seriesInfo name="RFC" value="8174"/>
+        </reference>
+      </references>
+      <references>
+        <name>Informative References</name>
+        <reference anchor="RFC10053">
+      <front><title>A Framework for Computing-Aware Traffic Steering (CATS)</title><author fullname="C. Li, Z. Du, M. Boucadair, L. M. Contreras, and J. Drake"/><date month="October" year="2026"/></front>
+      <seriesInfo name="RFC" value="10053"/>
+    </reference>
+<reference anchor="RFC10054">
+      <front><title>Computing-Aware Traffic Steering (CATS) Problem Statement, Use Cases, and Requirements</title><author fullname="CATS Working Group"/><date month="October" year="2026"/></front>
+      <seriesInfo name="RFC" value="10054"/>
+    </reference>
+      </references>
+    </references>
+
+    <section anchor="ChangeLog" numbered="false">
+      <name>Change Log</name>
+      <t>Changes in -00 (this version): Initial individual submission for discussion and review.</t>
+    </section>
+    <section anchor="Acknowledgements" numbered="false">
+      <name>Acknowledgements</name>
+      <t>This document is an initial individual submission. The author welcomes review from the CATS, NMRG, and DINRG communities.</t>
+    </section>
+    
+  </back>
+</rfc>

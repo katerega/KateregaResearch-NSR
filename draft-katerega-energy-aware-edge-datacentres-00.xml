@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-model href="rfc7991bis.rnc"?>
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude"
+     category="info"
+     docName="draft-katerega-energy-aware-edge-datacentres-00"
+     ipr="trust200902"
+     submissionType="IETF"
+     xml:lang="en"
+     version="3">
+  <front>
+    <title abbrev="Energy-Aware Edge Data Centres">Energy-Aware Operation of Distributed Edge Data-Centre Sites: Use Cases and Evaluation Considerations</title>
+    <seriesInfo name="Internet-Draft" value="draft-katerega-energy-aware-edge-datacentres-00"/>
+    <author fullname="Micheal Katerega" initials="M." surname="Katerega">
+      <organization>Nehemiah Stem Research Ltd.</organization>
+    </author>
+    <date year="2026" month="November" day="18"/>
+    <area>Internet</area>
+    <workgroup>Internet Engineering Task Force</workgroup>
+    <keyword>energy efficiency</keyword><keyword>edge computing</keyword><keyword>data centres</keyword><keyword>renewable energy</keyword><keyword>GREEN</keyword><keyword>workload management</keyword>
+    <abstract><t>This document describes use cases and evaluation considerations for energy-aware operation of distributed edge data-centre sites. It considers variable energy supply, storage, workload flexibility, cooling constraints, network-assisted placement, telemetry, and service continuity. It is intended to complement IETF GREEN work and does not define a new energy-management protocol or data model.</t></abstract>
+  </front>
+  <middle>
+    <section anchor="Introduction"><name>Introduction</name>
+<t>Edge and modular data-centre deployments may operate with constrained or variable energy supplies. Examples include remote facilities, rural edge sites, solar-powered micro-data centres, and installations using batteries or other local storage. Their operating conditions can differ substantially from those of large facilities connected to stable utility power.</t>
+<t>Energy-aware operation requires more than measuring total electricity consumption. Operators may need to understand the relationship between workload demand, available energy, stored energy, cooling requirements, and service objectives. Workload scheduling and admission decisions can affect both energy consumption and service availability.</t>
+<t>This document identifies use cases and operational considerations for energy-aware operation of distributed edge data-centre sites. It is intended to complement the IETF GREEN work on energy-efficiency management and associated management models. It does not define a new energy-management protocol, YANG module, metric registry, or control algorithm.</t>
+<section><name>Requirements Language</name><t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" are to be interpreted as described in BCP 14 <xref target="RFC2119"/> <xref target="RFC8174"/> when, and only when, they appear in all capitals.</t></section>
+<section><name>Terminology</name><dl newline="true">
+<dt>Edge data-centre site:</dt><dd>A facility providing compute and storage close to users, devices, or data sources.</dd>
+<dt>Energy source:</dt><dd>A source supplying electrical energy to a site, such as a utility connection, photovoltaic system, generator, or another source.</dd>
+<dt>Energy storage:</dt><dd>A system that stores energy for later use, such as a battery.</dd>
+<dt>Energy headroom:</dt><dd>An estimate of energy or power available for additional load while respecting configured operating constraints.</dd>
+<dt>Workload flexibility:</dt><dd>The extent to which a workload can be delayed, shifted, paused, or executed at an alternative site.</dd>
+<dt>Energy telemetry:</dt><dd>Measurements or estimates describing energy consumption, supply, storage, and related operating state.</dd>
+</dl></section></section>
+<section anchor="Scope"><name>Scope and Relationship to Existing Work</name>
+<t>The document focuses on operational use cases and evaluation considerations for compute and storage facilities at distributed edge locations. It considers the data-centre site as an energy-consuming and energy-constrained environment connected to IP networks.</t>
+<t>The IETF GREEN Working Group is developing energy-efficiency management frameworks, terminology, use cases, and power and energy management models. This document does not attempt to replace or duplicate that work. It identifies edge data-centre scenarios that may inform the application and evaluation of those mechanisms.</t>
+<t>Detailed electrical engineering, battery chemistry, power-electronics design, facility construction, and utility-grid control are outside the scope. This document does not specify a mandatory energy source, renewable-energy percentage, battery technology, or workload scheduling algorithm.</t>
+</section>
+<section anchor="UseCases"><name>Use Cases</name>
+<section><name>Solar-Powered Micro-Data Centre</name><t>A small site uses photovoltaic generation, battery storage, and a network connection to provide local services. Available energy varies over time. The operator may schedule flexible workloads when energy headroom is high while preserving reserve capacity for critical services.</t></section>
+<section><name>Remote Edge Site with Unreliable Utility Power</name><t>A remote site experiences utility interruptions and uses backup energy. The operator needs to distinguish normal operation, backup operation, and low-reserve conditions. Workload admission may be restricted to protect essential services.</t></section>
+<section><name>Federated Workload Placement</name><t>An application can run at more than one edge site. When one site has limited energy headroom, a flexible workload may be placed at another site, subject to network capacity, data locality, privacy, and service-level requirements.</t></section>
+<section><name>Thermal and Cooling Constraints</name><t>Energy consumption and cooling capacity are coupled. High compute utilization may increase cooling demand and cause thermal limits to be reached. Energy-aware management should not optimize compute energy in isolation from facility safety and thermal constraints.</t></section>
+</section>
+<section anchor="Information"><name>Energy and Operational Information</name>
+<t>Energy-aware decisions may use information from several domains. The following categories are illustrative and do not define a new standardized data model.</t>
+<table><name>Information Categories</name><thead><tr><th>Category</th><th>Examples</th><th>Operational use</th></tr></thead><tbody>
+<tr><td>Energy consumption</td><td>Site power, energy over an interval, subsystem consumption</td><td>Baseline and trend analysis</td></tr>
+<tr><td>Energy supply</td><td>Available generation, utility state, forecast range</td><td>Estimate near-term supply</td></tr>
+<tr><td>Storage</td><td>State of charge, charge/discharge limits, reserve policy</td><td>Protect reserve and plan workloads</td></tr>
+<tr><td>Compute</td><td>CPU/GPU utilization, workload class, queue depth</td><td>Estimate workload demand</td></tr>
+<tr><td>Thermal</td><td>Inlet temperature, cooling state, thermal alarms</td><td>Respect safe operating envelope</td></tr>
+<tr><td>Network</td><td>Reachability, path capacity, delay, transfer cost</td><td>Evaluate workload relocation</td></tr>
+<tr><td>Service policy</td><td>Priority, deadlines, availability objective</td><td>Protect critical workloads</td></tr>
+</tbody></table>
+<t>Measurements should include units, observation time, source, and where appropriate a quality or confidence indicator. Forecasts should be distinguished from measurements. A forecast is not a guarantee of future energy availability.</t>
+</section>
+<section anchor="Control"><name>Operational Control Considerations</name>
+<t>An energy-aware management system may expose information to an operator or orchestration function that selects among actions such as admitting a workload, delaying a flexible task, reducing non-critical load, moving a workload, or entering a controlled low-power state.</t>
+<t>Actions should respect service priority, workload deadlines, data locality, security policy, and facility constraints. A system should not shut down or throttle critical services solely to improve an energy-efficiency metric.</t>
+<t>Where management connectivity is lost, a site should have locally enforceable operating limits and a defined fallback policy. Safety-critical power and thermal protection should remain under the control of appropriate facility systems rather than depending exclusively on a remote orchestration service.</t>
+<t>Energy and network management may exchange information, but the control responsibilities and authority boundaries should be explicit. A network controller should not be assumed to have authority over electrical protection systems.</t>
+</section>
+<section anchor="Metrics"><name>Evaluation Metrics and Methodology</name>
+<t>Evaluation should report both energy-related outcomes and service outcomes. A reduction in energy consumption is not sufficient evidence of improvement if it results in unacceptable service interruption or excessive data movement.</t>
+<table><name>Suggested Evaluation Measures</name><thead><tr><th>Measure</th><th>Description</th></tr></thead><tbody>
+<tr><td>Energy consumed</td><td>Energy used over a defined interval, with measurement boundary stated</td></tr>
+<tr><td>Energy per completed task</td><td>Energy consumed divided by successfully completed work units</td></tr>
+<tr><td>Renewable energy utilization</td><td>Energy supplied from renewable sources under a clearly stated accounting method</td></tr>
+<tr><td>Service availability</td><td>Time during which a service meets its availability definition</td></tr>
+<tr><td>Task completion time</td><td>Elapsed time from accepted task to completion</td></tr>
+<tr><td>Workload migration overhead</td><td>Network bytes, energy, and interruption attributable to relocation</td></tr>
+<tr><td>Reserve violations</td><td>Occurrences where configured energy reserve or safety limits are crossed</td></tr>
+</tbody></table>
+<t>Experiments should disclose the measurement boundary, hardware, workload, sampling interval, power source assumptions, storage assumptions, and baseline policy. Comparisons should use equivalent workloads and report uncertainty and failed tasks.</t>
+</section>
+<section anchor="Scenarios"><name>Example Experimental Scenarios</name>
+<ol><li>Run a fixed workload under utility-only power and record energy and service metrics.</li><li>Repeat with variable renewable generation and a battery model.</li><li>Introduce a low-energy period and compare fixed scheduling with flexible workload scheduling.</li><li>Introduce a network partition and measure the behaviour of locally enforced policies.</li><li>Compare local execution with relocation to a second site, including data-transfer energy and network overhead.</li><li>Introduce cooling constraints and verify that the control policy respects facility limits.</li></ol>
+<t>Both simulated and physical testbeds are useful. Results from simulation should identify model assumptions and should not be presented as measurements from a physical facility.</t>
+</section>
+<section anchor="Security"><name>Security Considerations</name>
+<t>Energy telemetry can reveal site occupancy, workload activity, operational schedules, and facility weaknesses. Access to detailed telemetry should be controlled according to operational need.</t>
+<t>False energy measurements or forecasts could cause workload overload, premature shutdown, or reserve depletion. Implementations should consider source authentication, integrity protection, freshness checks, and plausibility validation.</t>
+<t>Remote control of power-related workloads or site operating modes can have physical consequences. Management systems should use authenticated and authorized control channels, audit significant changes, and preserve independent facility protection mechanisms.</t>
+</section>
+<section anchor="IANA"><name>IANA Considerations</name><t>This document makes no request to IANA and defines no protocol numbers, registries, or code points.</t></section>
+<section anchor="OpenIssues"><name>Open Issues</name>
+<t>Further discussion is needed on the most useful boundary between network energy management and data-centre facility management; how to represent uncertainty in energy forecasts; how to compare energy-per-task measurements across heterogeneous hardware; and how to express workload criticality without creating a competing policy model.</t>
+<t>Any future protocol or data-model proposal should be coordinated with the GREEN Working Group and should reuse existing terminology and management structures where possible.</t>
+</section>
+  </middle>
+  <back>
+    
+    <references>
+      <name>References</name>
+      <references>
+        <name>Normative References</name>
+        <reference anchor="RFC2119">
+          <front><title>Key words for use in RFCs to Indicate Requirement Levels</title>
+            <author initials="S." surname="Bradner" fullname="S. Bradner"/>
+            <date month="March" year="1997"/></front>
+          <seriesInfo name="BCP" value="14"/><seriesInfo name="RFC" value="2119"/>
+        </reference>
+        <reference anchor="RFC8174">
+          <front><title>Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words</title>
+            <author initials="B." surname="Leiba" fullname="B. Leiba"/>
+            <date month="May" year="2017"/></front>
+          <seriesInfo name="BCP" value="14"/><seriesInfo name="RFC" value="8174"/>
+        </reference>
+      </references>
+      <references>
+        <name>Informative References</name>
+        <reference anchor="RFC10053">
+      <front><title>A Framework for Computing-Aware Traffic Steering (CATS)</title><author fullname="C. Li, Z. Du, M. Boucadair, L. M. Contreras, and J. Drake"/><date month="October" year="2026"/></front>
+      <seriesInfo name="RFC" value="10053"/>
+    </reference>
+      </references>
+    </references>
+
+    <section anchor="ChangeLog" numbered="false">
+      <name>Change Log</name>
+      <t>Changes in -00 (this version): Initial individual submission for discussion and review.</t>
+    </section>
+    <section anchor="Acknowledgements" numbered="false">
+      <name>Acknowledgements</name>
+      <t>This document is an initial individual submission. The author welcomes review from the GREEN Working Group and the network management research community.</t>
+    </section>
+    
+  </back>
+</rfc>

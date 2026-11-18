@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-model href="rfc7991bis.rnc"?>
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude"
+     category="info"
+     docName="draft-katerega-mars-surface-computing-continuity-00"
+     ipr="trust200902"
+     submissionType="IETF"
+     xml:lang="en"
+     version="3">
+  <front>
+    <title abbrev="Mars Surface Computing Continuity">Local Computing Service Continuity for Mars Surface Networks</title>
+    <seriesInfo name="Internet-Draft" value="draft-katerega-mars-surface-computing-continuity-00"/>
+    <author fullname="Micheal Katerega" initials="M." surname="Katerega">
+      <organization>Nehemiah Stem Research Ltd.</organization>
+    </author>
+    <date year="2026" month="November" day="18"/>
+    <area>Internet</area>
+    <workgroup>Internet Engineering Task Force</workgroup>
+    <keyword>Mars</keyword><keyword>deep-space networking</keyword><keyword>distributed computing</keyword><keyword>service continuity</keyword><keyword>DTN</keyword><keyword>TIPTOP</keyword>
+    <abstract><t>This document describes an application and operational framework for maintaining local computing services at Mars surface sites during delayed, intermittent, or unavailable communication with Earth. It discusses service continuity profiles, local data authority, synchronization, local resource management, security, and an experimental evaluation methodology. It complements deep-space IP and delay-tolerant networking work and does not define a new networking protocol.</t></abstract>
+  </front>
+  <middle>
+    <section anchor="Introduction"><name>Introduction</name>
+<t>Future surface operations on Mars may include habitats, laboratories, robotic systems, communications facilities, and local computing resources. These systems will need computing and information services even when communication with Earth is delayed, intermittent, or temporarily unavailable.</t>
+<t>Earth-Mars communication is subject to substantial propagation delay that varies with planetary geometry. In addition, planetary operations may experience scheduled communication windows, link outages, limited bandwidth, and infrastructure failures. Applications that depend on continuous interaction with remote Earth-based services may therefore be unsuitable for critical local operations.</t>
+<t>This document describes an application and operational framework for local computing service continuity in a Mars surface network. It considers how local data-centre resources can host services for surface users and systems while maintaining asynchronous exchange with remote sites. It is intended to complement work on IP in deep space and delay-tolerant networking. It does not define a new IP architecture, transport protocol, DTN protocol, addressing plan, or space link protocol.</t>
+<section><name>Requirements Language</name><t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" are to be interpreted as described in BCP 14 <xref target="RFC2119"/> <xref target="RFC8174"/> when, and only when, they appear in all capitals.</t></section>
+<section><name>Terminology</name><dl newline="true">
+<dt>Mars surface site:</dt><dd>A habitat, research facility, landing site, or other operational location on the Martian surface.</dd>
+<dt>Local computing site:</dt><dd>A facility providing compute, storage, and application services within a Mars surface operational area.</dd>
+<dt>Earth-connected service:</dt><dd>A service whose authoritative instance or required dependency is located on Earth.</dd>
+<dt>Locally autonomous service:</dt><dd>A service capable of performing a defined set of functions without continuous connectivity to Earth.</dd>
+<dt>Communication outage:</dt><dd>A period during which a required communication path is unavailable or cannot meet an application's service requirements.</dd>
+<dt>Service continuity profile:</dt><dd>A description of the functions, data, dependencies, and operating limits that a service can maintain during degraded or disconnected operation.</dd>
+</dl></section></section>
+<section anchor="Scope"><name>Scope and Relationship to Existing Work</name>
+<t>The IETF TIPTOP Working Group addresses IP networking in deep-space environments. The Delay-Tolerant Networking architecture and Bundle Protocol provide established approaches for communication in environments with long delays and intermittent connectivity <xref target="RFC4838"/> <xref target="RFC9171"/>. Bundle Protocol Security describes security services for Bundle Protocol communications <xref target="RFC9172"/>.</t>
+<t>This document focuses on the computing and application-service layer at Mars surface sites. It treats the IP and DTN communication mechanisms as underlying services and does not seek to modify their operation. It also does not define the IP architecture for deep space, a QUIC profile, a new naming or addressing system, or a new DTN convergence layer.</t>
+<t>The document is an architectural and research proposal. It does not assert that any particular Mars settlement architecture has been selected or deployed. It is relevant to a broad range of future robotic and human exploration missions, including concepts for sustained Mars surface operations.</t>
+</section>
+<section anchor="Architecture"><name>Reference Architecture</name>
+<t>A Mars surface network may contain multiple local computing sites connected to habitat networks, science instruments, robotic systems, local storage, and one or more communication gateways. An orbital relay or other space communications infrastructure may provide intermittent paths to Earth-based services.</t>
+<figure><name>Illustrative Mars Surface Computing Architecture</name><artwork type="ascii-art"><![CDATA[
+              +-----------------------+
+              | Earth-based services  |
+              +-----------+-----------+
+                          |
+                Intermittent / delayed
+                    space links
+                          |
+              +-----------v-----------+
+              | Orbital / relay links |
+              +-----------+-----------+
+                          |
+              +-----------v-----------+
+              | Mars communications   |
+              | gateway                |
+              +-----------+-----------+
+                          |
+        +-----------------+------------------+
+        |                                    |
++-------v--------+                  +--------v-------+
+| Surface Site A |                  | Surface Site B |
+| Local compute  |<---- local ----->| Local compute  |
+| Local storage  |      network     | Local storage  |
+| Local services |                  | Local services |
++----------------+                  +----------------+
+        |                                    |
+  Habitat / robots                    Science / habitat
+]]></artwork></figure>
+<t>Each local computing site may host selected services, data replicas, caches, and control functions. A service may have a local authoritative instance, a local operational replica, or a read-only local representation. The required consistency and authority model depends on the application.</t>
+</section>
+<section anchor="Continuity"><name>Service Continuity Profiles</name>
+<t>Applications should describe what they can continue to do when communication with Earth is delayed or unavailable. A single binary designation of online or offline is insufficient for services with different functions and data dependencies.</t>
+<table><name>Illustrative Service Continuity Profiles</name><thead><tr><th>Profile</th><th>Behaviour during Earth outage</th><th>Example service</th></tr></thead><tbody>
+<tr><td>Local autonomous</td><td>Continues its defined core functions using local data and authority</td><td>Habitat environmental monitoring dashboard</td></tr>
+<tr><td>Local degraded</td><td>Continues a limited function set and records deferred operations</td><td>Inventory and maintenance management</td></tr>
+<tr><td>Store-and-forward</td><td>Accepts eligible data locally and transfers it when a path is available</td><td>Science data collection</td></tr>
+<tr><td>Read-only replica</td><td>Serves a known local snapshot but does not accept authoritative changes</td><td>Reference documentation service</td></tr>
+<tr><td>Earth-dependent</td><td>Cannot perform its essential function without a remote service</td><td>Remote specialist consultation</td></tr>
+</tbody></table>
+<t>Each profile should identify permitted operations, local data requirements, freshness expectations, conflict handling, and conditions for returning to normal operation. Safety-critical systems require mission-specific assurance and must not rely on a generic profile alone.</t>
+</section>
+<section anchor="Data"><name>Data Synchronization and Reconciliation</name>
+<t>Local operation can create data that must later be transferred to other surface sites or Earth. Applications should classify data according to whether it is immutable, append-only, locally authoritative, replicated, or subject to concurrent updates.</t>
+<t>Where concurrent changes are possible, the application should define conflict detection and resolution rules before deployment. Possible approaches include single-writer authority, versioned records, application-level merge rules, or explicit human review. The choice depends on the data type and mission policy.</t>
+<t>Data transfer scheduling may consider priority, size, age, deadline, link availability, and storage capacity. Large science data transfers may be deferred while high-priority operational messages are scheduled for an available communication opportunity.</t>
+<t>Store-and-forward transport mechanisms such as the Bundle Protocol can support communication across disrupted links. This document does not prescribe a particular bundle routing algorithm or modify Bundle Protocol semantics.</t>
+</section>
+<section anchor="Resource"><name>Local Computing Resource Management</name>
+<t>Local computing sites may have constrained power, thermal management, spare parts, and maintenance opportunities. Resource management should therefore consider workload priority, expected duration, compute and storage demand, energy budget, and the consequences of service interruption.</t>
+<t>Critical local services should have documented minimum resource requirements and a policy for operation during degraded conditions. Flexible workloads may be paused, delayed, or shifted between surface sites where data access and communication conditions permit.</t>
+<t>Resource allocation should account for dependencies on local sensors, control systems, time sources, identity services, storage, and network connectivity. A service that is running but has lost a required dependency should not be reported as fully operational.</t>
+</section>
+<section anchor="Security"><name>Security and Trust Considerations</name>
+<t>Surface computing sites may store mission plans, scientific data, operational records, and information related to crew and robotic activities. The security design should consider confidentiality, integrity, availability, authentication, authorization, and physical access to computing facilities.</t>
+<t>When data is transferred over delay-tolerant paths, implementations should use appropriate security mechanisms for the underlying protocols and applications. BPSec provides security services for Bundle Protocol data <xref target="RFC9172"/>; its applicability and configuration remain deployment-specific.</t>
+<t>Long disconnection periods complicate credential revocation, policy updates, and centralized monitoring. Systems should define bounded credential lifetimes, local authorization policy, audit retention, and procedures for reconciling security events after connectivity returns.</t>
+<t>Local autonomy creates additional risk if a compromised site continues operating without central oversight. Mission operators should define which actions may be performed autonomously, which require local human authorization, and which must remain disabled during a communications outage.</t>
+</section>
+<section anchor="Evaluation"><name>Evaluation and Research Methodology</name>
+<t>A research prototype can emulate a Mars surface network with at least two local computing sites, one remote Earth service environment, and a configurable delayed or intermittent communication link.</t>
+<ol><li>Deploy representative local services at each surface site.</li><li>Measure normal operation with continuous connectivity.</li><li>Introduce controlled one-way and round-trip delay, bandwidth limits, packet loss, and complete communication outages.</li><li>Measure local service availability and the functions retained under each continuity profile.</li><li>Generate concurrent updates at multiple sites and evaluate reconciliation behaviour.</li><li>Restore connectivity and measure synchronization time, data loss, conflicts, and resource overhead.</li><li>Repeat under compute, storage, and energy constraints.</li></ol>
+<t>Suggested measures include local service availability, successful task completion, data freshness, synchronization backlog, reconciliation conflicts, recovery time, bandwidth consumption, storage growth, and energy consumed per completed task.</t>
+<t>Experiments should clearly distinguish simulated link conditions from flight-qualified or space-qualified performance. A terrestrial testbed can validate software behaviour and architectural assumptions but cannot establish radiation tolerance, launch suitability, or spaceflight reliability.</t>
+</section>
+<section anchor="IANA"><name>IANA Considerations</name><t>This document makes no request to IANA and defines no protocol numbers, registries, or code points.</t></section>
+<section anchor="OpenIssues"><name>Open Issues</name>
+<t>Further work is needed to identify suitable service-continuity terminology, the relationship between application-level continuity profiles and TIPTOP network assumptions, methods for representing local authority and data freshness, and security operations during long periods without central connectivity.</t>
+<t>Any future protocol proposal should be coordinated with TIPTOP and the relevant DTN community. The work should avoid duplicating the deep-space IP architecture, QUIC profile, or use-case documents being developed by TIPTOP.</t>
+</section>
+  </middle>
+  <back>
+    
+    <references>
+      <name>References</name>
+      <references>
+        <name>Normative References</name>
+        <reference anchor="RFC2119">
+          <front><title>Key words for use in RFCs to Indicate Requirement Levels</title>
+            <author initials="S." surname="Bradner" fullname="S. Bradner"/>
+            <date month="March" year="1997"/></front>
+          <seriesInfo name="BCP" value="14"/><seriesInfo name="RFC" value="2119"/>
+        </reference>
+        <reference anchor="RFC8174">
+          <front><title>Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words</title>
+            <author initials="B." surname="Leiba" fullname="B. Leiba"/>
+            <date month="May" year="2017"/></front>
+          <seriesInfo name="BCP" value="14"/><seriesInfo name="RFC" value="8174"/>
+        </reference>
+      </references>
+      <references>
+        <name>Informative References</name>
+        <reference anchor="RFC4838">
+      <front><title>Delay-Tolerant Networking Architecture</title><author fullname="V. Cerf, S. Burleigh, et al."/><date month="April" year="2007"/></front>
+      <seriesInfo name="RFC" value="4838"/>
+    </reference>
+<reference anchor="RFC9171">
+      <front><title>Bundle Protocol Version 7</title><author fullname="S. Burleigh, K. Fall, and E. Birrane"/><date month="January" year="2022"/></front>
+      <seriesInfo name="RFC" value="9171"/>
+    </reference>
+<reference anchor="RFC9172">
+      <front><title>Bundle Protocol Security (BPSec)</title><author fullname="E. Birrane and K. McKeever"/><date month="January" year="2022"/></front>
+      <seriesInfo name="RFC" value="9172"/>
+    </reference>
+      </references>
+    </references>
+
+    <section anchor="ChangeLog" numbered="false">
+      <name>Change Log</name>
+      <t>Changes in -00 (this version): Initial individual submission for discussion and review.</t>
+    </section>
+    <section anchor="Acknowledgements" numbered="false">
+      <name>Acknowledgements</name>
+      <t>This document is an initial individual submission. The author welcomes review from the TIPTOP Working Group and the Delay/Disruption Tolerant Networking community.</t>
+    </section>
+    
+  </back>
+</rfc>
